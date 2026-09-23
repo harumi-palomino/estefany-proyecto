@@ -1,0 +1,60 @@
+<section class="grid md:grid-cols-2 gap-10 items-center py-16">
+  <div>
+    <h1 class="font-serif text-4xl md:text-5xl font-semibold text-navy leading-tight">
+      Todo lo que buscas,<br>a un clic de distancia
+    </h1>
+    <p class="mt-5 text-carbon/70 max-w-md">
+      En Mi Tienda encuentras tecnología y accesorios seleccionados con cuidado,
+      con envíos rápidos y precios pensados para vos.
+    </p>
+    <button id="btnVerProductos" class="mt-8 boton-dorado px-6 py-3 rounded-md font-medium">
+      Ver productos
+    </button>
+  </div>
+
+  <div>
+    <img src="https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=900&q=80"
+         alt="Persona revisando compras en su celular"
+         class="rounded-lg w-full h-72 md:h-96 object-cover">
+  </div>
+</section>
+
+<section class="py-12 border-t border-black/5">
+  <div class="grid sm:grid-cols-3 gap-8">
+    <div>
+      <img src="https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=400&q=80"
+           alt="Paquete listo para envío"
+           class="rounded-md w-full h-36 object-cover mb-4">
+      <h3 class="font-serif text-lg text-navy">Envíos rápidos</h3>
+      <p class="text-sm text-carbon/70 mt-1">Tu pedido llega a la puerta de tu casa en pocos días.</p>
+    </div>
+
+    <div>
+      <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=400&q=80"
+           alt="Producto de calidad sobre una mesa"
+           class="rounded-md w-full h-36 object-cover mb-4">
+      <h3 class="font-serif text-lg text-navy">Calidad garantizada</h3>
+      <p class="text-sm text-carbon/70 mt-1">Cada producto pasa por un control antes de salir de bodega.</p>
+    </div>
+
+    <div>
+      <img src="https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&w=400&q=80"
+           alt="Persona pagando con tarjeta"
+           class="rounded-md w-full h-36 object-cover mb-4">
+      <h3 class="font-serif text-lg text-navy">Pago seguro</h3>
+      <p class="text-sm text-carbon/70 mt-1">Tus datos y tu compra están protegidos en todo momento.</p>
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    var boton = document.getElementById('btnVerProductos');
+    if (boton) {
+      boton.addEventListener('click', function () {
+        var enlaceProductos = document.querySelector('.enlace-nav[data-pagina="productos"]');
+        if (enlaceProductos) enlaceProductos.click();
+      });
+    }
+  })();
+</script>
