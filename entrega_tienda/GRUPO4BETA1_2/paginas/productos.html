@@ -1,0 +1,312 @@
+<section class="py-16">
+  <div class="max-w-7xl mx-auto px-6">
+
+    <div class="mb-10">
+      <h1 class="font-serif text-3xl md:text-4xl text-navy"> Nuestros productos</h1>
+      <p class="mt-2 text-carbon/70">
+        Encuentra los productos que tenemos disponibles en nuestra tienda.
+      </p>
+    </div>
+    <form id="form-filtros" class="mb-6 flex gap-4 items-center">
+        <div class="w-full">
+        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre del producto</label>
+        <input type="text" id="nombre" name="nombre" class="mt-1 p-2 border rounded-md w-full" placeholder="Buscar por nombre...">
+        </div>
+        <button type="submit" class="mt-5 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+        Filtrar
+    </button>
+  </form>
+    <div id="contenedorProductos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+
+    <p id="mensajeCarga" class="text-center text-carbon/70 py-10">
+      Cargando productos...
+    </p>
+
+  </div>
+
+</section>
+
+<!-- Modal de detalle de producto con animación Fade In, con duración de 300ms. -->
+<div 
+  id="modalOverlay" 
+  class="fixed inset-0 bg-black/60 backdrop-blur-sm opacity-0 pointer-events-none transition-all duration-300 ease-out flex items-center justify-center p-4 z-50"
+>
+  <div 
+    id="modalCaja" 
+    class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative shadow-2xl transform scale-95 transition-all duration-200 ease-out p-6"
+  >
+    <button 
+      id="btnCerrarModal" 
+      type="button"
+      class="absolute top-4 right-4 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 text-carbon/60 hover:text-carbon text-xl transition-colors"
+    >
+      &times;
+    </button>
+    <div id="modalContenido" class="p-2 text-center text-carbon/70">
+      Cargando...
+    </div>
+  </div>
+</div>
+
+<script>
+  (function () {
+    const contenedor = document.getElementById("contenedorProductos");
+    const mensajeCarga = document.getElementById("mensajeCarga");
+
+    fetch("../api_tienda/productos/listar.php")
+      .then(function (respuesta) {
+        if (!respuesta.ok) throw new Error("No se pudieron obtener los productos");
+        return respuesta.json();
+      })
+      .then(function (productos) {
+        mensajeCarga.style.display = "none";
+
+        productos.forEach(function (producto) {
+          const card = document.createElement("article");
+          const imagenPrincipal = producto.imagenes[0] || "";
+
+          // Cards diseñadas exclusivamente con Tailwind.
+          card.className =
+            "bg-white rounded-xl border border-black/5 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between";
+
+          card.innerHTML = `
+            <div class="p-4 flex flex-col h-full justify-between">
+              <div>
+                <div class="h-56 flex items-center justify-center bg-gray-50 rounded-lg p-4 group overflow-hidden">
+                  <img
+                    src="${imagenPrincipal}"
+                    alt="${producto.nombre}"
+                    class="max-h-48 max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                  >
+                </div>
+
+                <div class="pt-5">
+                  <h2 class="font-serif text-lg text-navy font-semibold line-clamp-2 min-h-[56px]">
+                    ${producto.nombre}
+                  </h2>
+
+                  <p class="mt-3 text-xl font-semibold text-navy">
+                    S/ ${producto.precio.toFixed(2)}
+                  </p>
+                  <p class="mt-2 text-sm text-carbon/70 line-clamp-2">
+                     ${producto.descripcion}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="btnVerMas mt-5 w-full boton-dorado px-4 py-3 rounded-md font-medium transition-transform active:scale-95 shadow-sm"
+                data-id="${producto.id}"
+              >
+                Ver más
+              </button>
+            </div>
+          `;
+
+          contenedor.appendChild(card);
+        });
+      })
+      .catch(function (error) {
+        mensajeCarga.textContent = "No se pudieron cargar los productos. Intenta nuevamente.";
+        console.error("Error:", error);
+      });
+  })();
+
+  (function () {
+    const overlay = document.getElementById("modalOverlay");
+    const modalCaja = document.getElementById("modalCaja");
+    const modalContenido = document.getElementById("modalContenido");
+    const btnCerrarModal = document.getElementById("btnCerrarModal");
+    const contenedor = document.getElementById("contenedorProductos");
+
+    contenedor.addEventListener("click", function (e) {
+      const boton = e.target.closest(".btnVerMas");
+      if (!boton) return;
+
+      const id = boton.dataset.id;
+      abrirModal(id);
+    });
+
+    function abrirModal(id) {
+      overlay.classList.remove("opacity-0", "pointer-events-none");
+      overlay.classList.add("opacity-100", "pointer-events-auto");
+      modalCaja.classList.remove("scale-95");
+      modalCaja.classList.add("scale-100");
+
+      modalContenido.innerHTML = `<p class="py-10">Cargando producto...</p>`;
+
+      fetch(`../api_tienda/productos/detalle.php?id=${id}`)
+        .then(function (respuesta) {
+          if (!respuesta.ok) throw new Error("No se pudo obtener el producto");
+          return respuesta.json();
+        })
+        .then(function (producto) {
+          const miniaturas = producto.imagenes.length > 1
+            ? `<div class="mt-3 flex gap-2">${producto.imagenes.map(function (url) {
+                return `<img src="${url}" alt="" class="miniatura w-14 h-14 object-contain bg-gray-50 border border-gray-200 rounded-md p-1 cursor-pointer hover:border-dorado">`;
+              }).join("")}</div>`
+            : "";
+
+          // Rediseñado en 2 columnas para el Modal con Tailwind
+          modalContenido.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left items-center pt-2">
+              <div>
+                <div class="h-64 md:h-72 flex items-center justify-center bg-gray-50 rounded-xl p-4 border border-gray-100">
+                  <img id="imagenPrincipalModal" src="${producto.imagenes[0] || ""}" alt="${producto.nombre}" class="max-h-56 max-w-full object-contain">
+                </div>
+                ${miniaturas}
+              </div>
+
+              <div class="flex flex-col justify-between h-full space-y-3">
+                <div>
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="inline-block text-[11px] uppercase tracking-wider text-slate-600 bg-slate-100 border border-slate-200/60 rounded-md px-2.5 py-1 font-semibold">
+                      ${producto.categoria}
+                    </span>
+                    
+                    <span class="inline-flex items-center text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-1 rounded-md">Stock: ${producto.stock}</span>
+                  </div>
+
+                  <h2 class="mt-3 font-serif text-xl md:text-2xl text-navy font-bold leading-snug">
+                    ${producto.nombre}
+                  </h2>
+
+                  <p class="mt-2 text-2xl font-extrabold text-navy">
+                    S/ ${producto.precio.toFixed(2)}
+                  </p>
+
+                  <p class="mt-3 text-sm text-carbon/70 leading-relaxed line-clamp-4">
+                    ${producto.descripcion}
+                  </p>
+                </div>
+
+                <div class="pt-4 border-t border-gray-100">
+                  <button onclick="carroNotificacion()" type="button" class="w-full boton-dorado py-3 px-6 rounded-lg font-semibold shadow-md transition-transform active:scale-95">
+                    Añadir al carrito
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          modalContenido.querySelectorAll(".miniatura").forEach(function (mini) {
+            mini.addEventListener("click", function () {
+              document.getElementById("imagenPrincipalModal").src = mini.src;
+            });
+          });
+        })
+        .catch(function (error) {
+          modalContenido.innerHTML = `<p class="py-10 text-carbon/70">No se pudo cargar el producto. Intenta nuevamente.</p>`;
+          console.error("Error:", error);
+        });
+    }
+
+    function cerrarModal() {
+      overlay.classList.remove("opacity-100", "pointer-events-auto");
+      overlay.classList.add("opacity-0", "pointer-events-none");
+      modalCaja.classList.remove("scale-100");
+      modalCaja.classList.add("scale-95");
+    }
+
+    btnCerrarModal.addEventListener("click", cerrarModal);
+
+    overlay.addEventListener("click", function (e) {
+      if (e.target === overlay) cerrarModal();
+    });
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") cerrarModal();
+    });
+  })();
+(function () {
+    const formFiltros = document.getElementById("form-filtros");
+    const contenedor = document.getElementById("contenedorProductos");
+    const mensajeCarga = document.getElementById("mensajeCarga");
+
+    if (formFiltros) {
+      formFiltros.addEventListener("submit", function (e) {
+        e.preventDefault(); // Evita la recarga de la página
+
+        mensajeCarga.style.display = "block";
+        mensajeCarga.textContent = "Filtrando productos...";
+        contenedor.innerHTML = "";
+
+        const formData = new FormData(formFiltros);
+
+        fetch("../api_tienda/productos/filtrar.php", {
+          method: "POST",
+          body: formData
+        })
+          .then(function (respuesta) {
+            if (!respuesta.ok) throw new Error("No se pudo filtrar los productos");
+            return respuesta.json();
+          })
+          .then(function (productos) {
+            mensajeCarga.style.display = "none";
+
+            if (!productos || productos.length === 0) {
+              mensajeCarga.style.display = "block";
+              mensajeCarga.textContent = "No se encontraron productos con ese criterio.";
+              return;
+            }
+
+            productos.forEach(function (producto) {
+              const card = document.createElement("article");
+              const imagenPrincipal = producto.imagenes[0] || "";
+
+              card.className =
+                "bg-white rounded-xl border border-black/5 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between";
+
+              card.innerHTML = `
+                <div class="p-4 flex flex-col h-full justify-between">
+                  <div>
+                    <div class="h-56 flex items-center justify-center bg-gray-50 rounded-lg p-4 group overflow-hidden">
+                      <img
+                        src="${imagenPrincipal}"
+                        alt="${producto.nombre}"
+                        class="max-h-48 max-w-full object-contain transition-transform duration-300 group-hover:scale-105"
+                      >
+                    </div>
+
+                    <div class="pt-5">
+                      <h2 class="font-serif text-lg text-navy font-semibold line-clamp-2 min-h-[56px]">
+                        ${producto.nombre}
+                      </h2>
+
+                      <p class="mt-3 text-xl font-semibold text-navy">
+                        S/ ${producto.precio.toFixed(2)}
+                      </p>
+                      <p class="mt-2 text-sm text-carbon/70 line-clamp-2">
+                         ${producto.descripcion}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="btnVerMas mt-5 w-full boton-dorado px-4 py-3 rounded-md font-medium transition-transform active:scale-95 shadow-sm"
+                    data-id="${producto.id}"
+                  >
+                    Ver más
+                  </button>
+                </div>
+              `;
+
+              contenedor.appendChild(card);
+            });
+          })
+          .catch(function (error) {
+            mensajeCarga.style.display = "block";
+            mensajeCarga.textContent = "Error al filtrar los productos. Intenta nuevamente.";
+            console.error("Error:", error);
+          });
+      });
+    }
+  })();
+
+  function carroNotificacion(){
+      alert("Producto agregado al carrito");
+      return;
+  }
+</script>
